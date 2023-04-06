@@ -1,0 +1,53 @@
+int mian(){
+    ......
+    if (!canvas.init()) {
+        printf("canvas:%s",__FUNCTION__);
+        Log::error("%s: Could not initialize canvas\n", __FUNCTION__);
+        return 1;
+    }
+}
+
+/*canvas-generic.cpp*/
+bool CanvasGeneric::init(){
+    ......
+    gl_state_.init_display(native_state_.display(), visual_config_);
+}
+
+/*gl-state-egl.cpp*/
+bool GLStateEGL::init_display(void* native_display, GLVisualConfig& visual_config){
+    ......
+    if (gladLoadEGLUserPtr(EGL_NO_DISPLAY, load_egl_func, &egl_lib_) == 0) {
+        printf("3.1 %s\n",__FUNCTION__);
+        Log::error("Loading EGL entry points failed\n");
+        return false;
+    }
+}
+
+/*egl.c*/
+int gladLoadEGLUserPtr(EGLDisplay display, GLADuserptrloadfunc load, void* userptr){
+    ......
+    version = glad_egl_find_core_egl(display);
+}
+static int glad_egl_find_core_egl(EGLDisplay display) {
+    ......
+    #ifdef EGL_VERSION_1_4
+        if (display == EGL_NO_DISPLAY) {
+            display = eglGetDisplay(EGL_DEFAULT_DISPLAY); -->问题点调用eglGetDisplay() 会引发段错误导致core dumped
+        }
+    #endif
+}
+
+glad_eglGetDisplay = (PFNEGLGETDISPLAYPROC) load(userptr, "eglGetDisplay"); 
+
+/*egl.h EGL_DEFAULT_DISPLAY定义*/
+#define EGL_DEFAULT_DISPLAY EGL_CAST(EGLNativeDisplayType,0)
+#define eglGetDisplay glad_eglGetDisplay
+
+
+/*eglplatform.h EGL_CAST定义*/
+/* C++ / C typecast macros for special EGL handle values */
+#if defined(__cplusplus)
+#define EGL_CAST(type, value) (static_cast<type>(value))
+#else
+#define EGL_CAST(type, value) ((type) (value))
+#endif
