@@ -1,0 +1,24 @@
+<!-- book\ch09\9.3\websocket\index.html -->
+1. <body>
+2. <h1>chat/history:</h1>
+3. <!-- 1 -->
+4. <div id="mess"></div>
+5.
+6. <script type="text/javascript">
+7.     var mess = document.getElementById("mess");
+8.
+9.     // 2
+10.     var exampleSocket = new WebSocket("ws://"+location.host+"/ws")
+11.
+12.     // 3
+13.     var update = function(){
+14.         exampleSocket.onmessage = function (event) {
+15.             var chat = event.data;
+16.             var br=document.createElement("br");
+17.             messmess.textContent = mess.textContent+chat.toString();
+18.             mess.appendChild(br)
+19.         }
+20.     };
+21.     window.setTimeout(update);
+22. </script>
+23. </body>
